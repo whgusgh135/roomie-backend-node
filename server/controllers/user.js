@@ -42,7 +42,7 @@ exports.authenticate = async function(req, res, next) {
         if(isMatch) {
             const token = jwt.sign({
                 // dummy data for now
-                "name": "John Doe"
+                name: "John Doe"
             }, config.JWT_KEY, {expiresIn: "1h"});
 
             return res.json({
