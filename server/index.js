@@ -12,8 +12,10 @@ mongoose.connect(config.DB_URI, { useNewUrlParser: true });
 
 // routes
 const userRoutes = require("./routes/user");
+const roomieRoutes = require("./routes/roomie");
 
 app.use("/api/user", userRoutes);
+app.use("/api/roomie", roomieRoutes);
 
 
 // error handler
