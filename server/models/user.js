@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema({
     }
 });
 
+// before new user data is saved, this is performed
 userSchema.pre("save", async function(next) {
     try {
         if(!this.isModified("password")) {
@@ -30,6 +31,18 @@ userSchema.pre("save", async function(next) {
     }
 });
 
+// this method is needed for updating password
+// otherwise, new password would be saved without hashing
+userSchema.methods.hashPassword = async function(password, next) {
+    try {
+        let hashedPassword = await bcrypt.hash(password, 10)
+        return hashedPassword;
+    } catch(error) {
+        return next(error);
+    }
+};
+
+// method to compare unhashed user input with hashed password 
 userSchema.methods.comparePassword = async function(userPassword, next) {
     try {
         let isSame = await bcrypt.compareSync(userPassword, this.password);

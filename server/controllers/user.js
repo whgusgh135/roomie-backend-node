@@ -61,3 +61,21 @@ exports.authenticate = async function(req, res, next) {
         });
     }
 };
+
+exports.changePassword = async function(req, res, next) {
+    try {
+        let user = await User.findOne({id: req.body.id});
+        let isMatch = await user.comparePassword(req.body.password);
+        if(isMatch) {
+            let hashedPassword = await user.hashPassword(req.body.newPassword);
+            user.password = hashedPassword;
+            await User.updateOne({id: req.body.id}, user);
+            return res.json({"password": "changed"});
+        }
+    } catch(error) {
+        return next({
+            status: 400,
+            message: "Wrong ID or password."
+        })
+    }
+};
