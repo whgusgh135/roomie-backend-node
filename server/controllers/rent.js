@@ -1,4 +1,5 @@
 const Rent = require("../models/rent");
+const Region = require("../models/region");
 
 // INDEX route - api/rent
 exports.getRents = async function(req, res, next) {
@@ -31,7 +32,8 @@ exports.createRents = async function(req, res, next) {
     try {
         const {
             propertyType,
-            location,
+            region,
+            address,
             numberOfRooms,
             minResidents,
             maxResidents,
@@ -39,9 +41,12 @@ exports.createRents = async function(req, res, next) {
             description
         } = req.body;
 
+        region = await findRegion(region);
+
         await Rent.create({
             propertyType,
-            location,
+            region,
+            address,
             numberOfRooms,
             minResidents,
             maxResidents,
@@ -76,4 +81,17 @@ exports.deleteRent = async function(req, res, next) {
     } catch(error) {
         return next(error);
     }
+};
+
+// function to find relational region data
+async function findRegion(region) {
+    let foundRegion = await Region.findOne({"name": region});
+    // create one if one doesnt exist
+    if(foundRegion == null) {
+        await Region.create({
+            name: region
+        });
+        foundRegion = await Region.findOne({"name": region});
+    };
+    return foundRegion;
 };

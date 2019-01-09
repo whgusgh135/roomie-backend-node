@@ -12,10 +12,10 @@ exports.register = async function(req, res, next) {
             password
         });
 
-        // jwt to header
+        let user = await User.findOne({id});
+
         const token = jwt.sign({
-            // dummy data for now
-            "name": "John Doe"
+            userId: user._id
         }, config.JWT_KEY, {expiresIn: "1h"});
 
         return res.json({
@@ -28,7 +28,7 @@ exports.register = async function(req, res, next) {
         return next({
             status: 400,
             message: error.message
-        });
+        })
     }
 };
 
@@ -41,8 +41,7 @@ exports.authenticate = async function(req, res, next) {
         
         if(isMatch) {
             const token = jwt.sign({
-                // dummy data for now
-                name: "John Doe"
+                userId: user._id
             }, config.JWT_KEY, {expiresIn: "1h"});
 
             return res.json({
