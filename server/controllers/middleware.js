@@ -7,6 +7,7 @@ exports.loginRequired = async function(req, res, next) {
         const token = req.headers.authorization.split(" ")[1];
         jwt.verify(token, config.JWT_KEY, function(error, decoded) {
             if(decoded) {
+                res.locals.userId = decoded.userId;
                 return next();
             } else {
                 return next({

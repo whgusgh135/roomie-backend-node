@@ -1,5 +1,6 @@
 const Roomie = require("../models/roomie");
 const Region = require("../models/region");
+const User = require("../models/user");
 
 // INDEX route - api/roomie
 exports.getRoomies = async function(req, res, next) {
@@ -45,7 +46,7 @@ exports.createRoomie = async function(req, res, next) {
 
         region = await findRegion(region);
 
-        await Roomie.create({
+        let roomie = new Roomie({
             firstName, 
             lastName, 
             phoneNumber, 
@@ -53,6 +54,13 @@ exports.createRoomie = async function(req, res, next) {
             minBudget, 
             maxBudget
         });
+
+        await Roomie.create(roomie);
+
+        let user = await User.findById(res.locals.userId);
+        user.roomie = roomie;
+        await user.save();
+
         return res.status(200).json({"roomie": "success"});
 
     } catch(error) {
