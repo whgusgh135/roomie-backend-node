@@ -1,4 +1,5 @@
 const Roomie = require("../models/roomie");
+const Region = require("../models/region");
 
 // INDEX route - api/roomie
 exports.getRoomies = async function(req, res, next) {
@@ -33,7 +34,7 @@ exports.selectRoomie = async function(req, res, next) {
 // CREATE route - api/roomie
 exports.createRoomie = async function(req, res, next) {
     try {
-        const {
+        let {
             firstName, 
             lastName, 
             phoneNumber, 
@@ -41,6 +42,8 @@ exports.createRoomie = async function(req, res, next) {
             minBudget, 
             maxBudget
         } = req.body;
+
+        region = await findRegion(region);
 
         await Roomie.create({
             firstName, 
@@ -85,3 +88,16 @@ exports.deleteRoomie = async function(req, res, next) {
         })
     }
 }
+
+// function to find relational region data
+async function findRegion(region) {
+    let foundRegion = await Region.findOne({"name": region});
+    // create one if one doesnt exist
+    if(foundRegion == null) {
+        await Region.create({
+            name: region
+        });
+        foundRegion = await Region.findOne({"name": region});
+    };
+    return foundRegion;
+};

@@ -5,7 +5,11 @@ const rentSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    location: {
+    region: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Region"
+    },
+    address: {
         type: String,
         required: true
     },

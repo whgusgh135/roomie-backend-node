@@ -10,6 +10,14 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true
+    },
+    roomie: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Roomie"
+    },
+    rent: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Rent"
     }
 });
 
