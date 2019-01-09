@@ -1,5 +1,6 @@
 const Rent = require("../models/rent");
 const Region = require("../models/region");
+const User = require("../models/user");
 
 // INDEX route - api/rent
 exports.getRents = async function(req, res, next) {
@@ -30,7 +31,7 @@ exports.selectRent = async function(req, res, next) {
 // CREATE route - api/rent/new
 exports.createRents = async function(req, res, next) {
     try {
-        const {
+        let {
             propertyType,
             region,
             address,
@@ -43,7 +44,7 @@ exports.createRents = async function(req, res, next) {
 
         region = await findRegion(region);
 
-        await Rent.create({
+        let rent = new Rent({
             propertyType,
             region,
             address,
@@ -53,6 +54,13 @@ exports.createRents = async function(req, res, next) {
             rentPerWeek,
             description
         });
+
+        await Rent.create(rent);
+
+        let user = await User.findById(res.locals.userId);
+        user.rent = rent;
+        await user.save();
+
         return res.json({"rent": "success"});
 
     } catch(error) {
