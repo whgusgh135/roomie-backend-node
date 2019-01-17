@@ -9,6 +9,9 @@ const mongoose = require("mongoose");
 mongoose.Promise = Promise;
 mongoose.connect(config.DB_URI, { useNewUrlParser: true });
 
+// const cors = require("cors");
+// app.use(cors());
+
 
 // routes
 const userRoutes = require("./routes/user");

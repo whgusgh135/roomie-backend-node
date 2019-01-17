@@ -5,21 +5,28 @@ const config = require("../config/dev");
 // register
 exports.register = async function(req, res, next) {
     try {
-        const {id, password} = req.body;
+        const {id, password, firstName, lastName} = req.body;
 
         await User.create({
             id,
-            password
+            password,
+            firstName,
+            lastName
         });
 
         let user = await User.findOne({id});
 
         const token = jwt.sign({
-            userId: user._id
+            userId: user._id,
+            firstName,
+            lastName
         }, config.JWT_KEY, {expiresIn: "1h"});
 
         return res.json({
-            token
+            token,
+            userId: user._id,
+            firstName,
+            lastName
         });
     } catch(error) {
         if(error.code === 11000) {
@@ -34,18 +41,25 @@ exports.register = async function(req, res, next) {
 
 exports.authenticate = async function(req, res, next) {
     try {
-        let user = await User.findOne({id: req.body.id});
-        
+        let user = await User.findOne({id: req.body.id}).populate("roomie");
+        let roomie = (user.roomie) ? user.roomie : {"data": false};
         //check password matches
         let isMatch = await user.comparePassword(req.body.password);
         
         if(isMatch) {
             const token = jwt.sign({
-                userId: user._id
+                userId: user._id,
+                roomie: roomie,
+                firstName: user.firstName,
+                lastName: user.lastName
             }, config.JWT_KEY, {expiresIn: "1h"});
 
             return res.json({
-                token
+                token,
+                userId: user._id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                roomie
             });
         } else {
             return next({
@@ -70,6 +84,8 @@ exports.changePassword = async function(req, res, next) {
             user.password = hashedPassword;
             await User.updateOne({id: req.body.id}, user);
             return res.json({"password": "changed"});
+        } else {
+            throw Error;
         }
     } catch(error) {
         return next({
