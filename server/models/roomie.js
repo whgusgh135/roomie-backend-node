@@ -1,14 +1,6 @@
 const mongoose = require("mongoose");
 
 const roomieSchema = new mongoose.Schema({
-    firstName: {
-        type: String,
-        required: true
-    },
-    lastName: {
-        type: String,
-        required: true
-    },
     phoneNumber: {
         type: String,
         required: true
@@ -24,6 +16,9 @@ const roomieSchema = new mongoose.Schema({
     maxBudget: {
         type: Number,
         required: true
+    },
+    profileImage: {
+        type: String
     },
     isActive: {
         type: Boolean,
