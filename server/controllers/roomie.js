@@ -35,24 +35,26 @@ exports.selectRoomie = async function(req, res, next) {
 // CREATE route - api/roomie
 exports.createRoomie = async function(req, res, next) {
     try {
+        console.log(req.file.path);
         let {
-            firstName, 
-            lastName, 
             phoneNumber, 
             region, 
             minBudget, 
             maxBudget
         } = req.body;
 
+        let profileImage = req.file.path;
+
+        console.log(profileImage);
+
         region = await findRegion(region);
 
         let roomie = new Roomie({
-            firstName, 
-            lastName, 
             phoneNumber, 
             region, 
             minBudget, 
-            maxBudget
+            maxBudget,
+            profileImage
         });
 
         await Roomie.create(roomie);
