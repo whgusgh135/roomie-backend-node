@@ -35,7 +35,6 @@ exports.selectRoomie = async function(req, res, next) {
 // CREATE route - api/roomie
 exports.createRoomie = async function(req, res, next) {
     try {
-        console.log(req.file.path);
         let {
             phoneNumber, 
             region, 
@@ -44,8 +43,6 @@ exports.createRoomie = async function(req, res, next) {
         } = req.body;
 
         let profileImage = req.file.path;
-
-        console.log(profileImage);
 
         region = await findRegion(region);
 
@@ -60,6 +57,9 @@ exports.createRoomie = async function(req, res, next) {
         await Roomie.create(roomie);
 
         let user = await User.findById(res.locals.userId);
+        if(user.roomie !== null) {
+            throw new Error("Roomie data already exists for this user!");
+        }
         user.roomie = roomie;
         await user.save();
 

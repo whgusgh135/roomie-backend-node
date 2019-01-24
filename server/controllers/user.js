@@ -26,7 +26,8 @@ exports.register = async function(req, res, next) {
             token,
             userId: user._id,
             firstName,
-            lastName
+            lastName,
+            roomie: {"profileImage": "uploads/avatar-default.png"}
         });
     } catch(error) {
         if(error.code === 11000) {
@@ -42,10 +43,11 @@ exports.register = async function(req, res, next) {
 exports.authenticate = async function(req, res, next) {
     try {
         let user = await User.findOne({id: req.body.id}).populate("roomie");
-        let roomie = (user.roomie) ? user.roomie : {"data": false};
+
+        let roomie = (user.roomie) ? user.roomie : {"profileImage": "uploads/avatar-default.png"};
         //check password matches
         let isMatch = await user.comparePassword(req.body.password);
-        
+
         if(isMatch) {
             const token = jwt.sign({
                 userId: user._id,
