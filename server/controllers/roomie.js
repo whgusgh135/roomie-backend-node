@@ -42,7 +42,10 @@ exports.createRoomie = async function(req, res, next) {
             maxBudget
         } = req.body;
 
-        let profileImage = req.file.path;
+        let profileImage = "uploads/avatar-default.png";
+        if(req.file) {
+            profileImage = req.file.path;
+        }
 
         region = await findRegion(region);
 
@@ -54,16 +57,17 @@ exports.createRoomie = async function(req, res, next) {
             profileImage
         });
 
-        await Roomie.create(roomie);
-
         let user = await User.findById(res.locals.userId);
-        if(user.roomie !== null) {
+
+        if(user.roomie) {
             throw new Error("Roomie data already exists for this user!");
         }
+        
+        await roomie.save();
         user.roomie = roomie;
         await user.save();
 
-        return res.status(200).json({"roomie": "success"});
+        return res.status(200).json(roomie);
 
     } catch(error) {
         return next({
