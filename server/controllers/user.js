@@ -19,7 +19,8 @@ exports.register = async function(req, res, next) {
         const token = jwt.sign({
             userId: user._id,
             firstName,
-            lastName
+            lastName,
+            roomie: {"profileImage": "uploads/avatar-default.png"}
         }, config.JWT_KEY, {expiresIn: "1h"});
 
         return res.json({
