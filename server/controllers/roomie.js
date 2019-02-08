@@ -1,11 +1,13 @@
 const Roomie = require("../models/roomie");
 const Region = require("../models/region");
 const User = require("../models/user");
+const config = require("../config/dev");
+const jwt = require("jsonwebtoken");
 
 // INDEX route - api/roomie
 exports.getRoomies = async function(req, res, next) {
     try {
-        let roomies = await Roomie.find({});
+        let roomies = await Roomie.find({}).populate("region").limit(3);
         return res.status(200).json(roomies);
     } catch(error) {
         return next({
@@ -47,6 +49,8 @@ exports.createRoomie = async function(req, res, next) {
             profileImage = req.file.path;
         }
 
+        let user = await User.findById(res.locals.userId);
+
         region = await findRegion(region);
 
         let roomie = new Roomie({
@@ -54,10 +58,9 @@ exports.createRoomie = async function(req, res, next) {
             region, 
             minBudget, 
             maxBudget,
-            profileImage
+            profileImage,
+            name: user.firstName + " " + user.lastName
         });
-
-        let user = await User.findById(res.locals.userId);
 
         if(user.roomie) {
             throw new Error("Roomie data already exists for this user!");
@@ -67,7 +70,22 @@ exports.createRoomie = async function(req, res, next) {
         user.roomie = roomie;
         await user.save();
 
-        return res.status(200).json(roomie);
+        const token = jwt.sign({
+            userId: user._id,
+            roomie: roomie,
+            firstName: user.firstName,
+            lastName: user.lastName
+        }, config.JWT_KEY, {expiresIn: "1h"});
+
+        return res.json({
+            token,
+            userId: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            roomie
+        });
+        
+        //return res.status(200).json(roomie);
 
     } catch(error) {
         return next({

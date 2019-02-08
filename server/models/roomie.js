@@ -7,7 +7,12 @@ const roomieSchema = new mongoose.Schema({
     },
     region: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Region"
+        ref: "Region",
+        required: true
+    },
+    name: {
+        type: String,
+        required: true
     },
     minBudget: {
         type: Number,
