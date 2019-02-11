@@ -7,8 +7,23 @@ const jwt = require("jsonwebtoken");
 // INDEX route - api/roomie
 exports.getRoomies = async function(req, res, next) {
     try {
-        let roomies = await Roomie.find({}).populate("region").limit(3);
-        return res.status(200).json(roomies);
+        const region = req.query.region;
+        if(region) {
+            let foundRegion = await Region.find({name: {"$regex": region}}).populate("roomies");
+
+            // let foundRoomies = [];
+            // foundRegion.forEach(region => {
+            //     region.roomies.forEach(roomie => foundRoomies.push(roomie))
+            // });
+            
+            foundRoomies = [].concat.apply([],foundRegion.map(region => region.roomies));
+
+            return res.status(200).json(foundRoomies);
+        } else {
+            let roomies = await Roomie.find({}).limit(parseInt(req.query.num));
+            //let roomies = await Roomie.aggregate([{$sample: {size: parseInt(req.query.num)}}]);
+            return res.status(200).json(roomies);
+        }
     } catch(error) {
         return next({
             status: 400,
@@ -37,6 +52,12 @@ exports.selectRoomie = async function(req, res, next) {
 // CREATE route - api/roomie
 exports.createRoomie = async function(req, res, next) {
     try {
+        let user = await User.findById(res.locals.userId);
+
+        if(user.roomie) {
+            throw new Error("Roomie data already exists for this user!");
+        }
+
         let {
             phoneNumber, 
             region, 
@@ -49,10 +70,6 @@ exports.createRoomie = async function(req, res, next) {
             profileImage = req.file.path;
         }
 
-        let user = await User.findById(res.locals.userId);
-
-        region = await findRegion(region);
-
         let roomie = new Roomie({
             phoneNumber, 
             region, 
@@ -61,14 +78,15 @@ exports.createRoomie = async function(req, res, next) {
             profileImage,
             name: user.firstName + " " + user.lastName
         });
-
-        if(user.roomie) {
-            throw new Error("Roomie data already exists for this user!");
-        }
         
         await roomie.save();
+
         user.roomie = roomie;
         await user.save();
+
+        regionData = await findRegion(region.toLowerCase().replace(/\s+/g, ''));
+        regionData.roomies.push(roomie);
+        await regionData.save();
 
         const token = jwt.sign({
             userId: user._id,
@@ -127,7 +145,8 @@ async function findRegion(region) {
     // create one if one doesnt exist
     if(foundRegion == null) {
         await Region.create({
-            name: region
+            name: region,
+            roomies: []
         });
         foundRegion = await Region.findOne({"name": region});
     };
