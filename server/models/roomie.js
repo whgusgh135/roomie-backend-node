@@ -6,8 +6,7 @@ const roomieSchema = new mongoose.Schema({
         required: true
     },
     region: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Region",
+        type: String,
         required: true
     },
     name: {
