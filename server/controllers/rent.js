@@ -5,7 +5,7 @@ const User = require("../models/user");
 // INDEX route - api/rent
 exports.getRents = async function(req, res, next) {
     try {
-        let rents = await Rent.find({});
+        let rents = await Rent.find({}).limit(parseInt(req.query.num));
         return res.status(200).json(rents);
     } catch(error) {
         return next({
@@ -42,7 +42,12 @@ exports.createRents = async function(req, res, next) {
             description
         } = req.body;
 
-        region = await findRegion(region);
+        
+
+        let rentImages = [];
+        req.files.forEach(file => rentImages.push(file.path));
+
+        console.log(rentImages);
 
         let rent = new Rent({
             propertyType,
@@ -52,7 +57,8 @@ exports.createRents = async function(req, res, next) {
             minResidents,
             maxResidents,
             rentPerWeek,
-            description
+            description,
+            rentImages
         });
 
         await Rent.create(rent);

@@ -6,8 +6,8 @@ const rentSchema = new mongoose.Schema({
         required: true
     },
     region: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Region"
+        type: String,
+        required: true
     },
     address: {
         type: String,
@@ -31,7 +31,10 @@ const rentSchema = new mongoose.Schema({
     },
     description: {
         type: String
-    }
+    },
+    rentImages: [{
+        type: String
+    }]
 });
 
 module.exports = mongoose.model("Rent", rentSchema);
