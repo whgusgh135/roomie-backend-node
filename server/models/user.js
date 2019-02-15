@@ -23,10 +23,10 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Roomie"
     },
-    rent: {
+    rent: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Rent"
-    }
+    }]
 });
 
 // before new user data is saved, this is performed

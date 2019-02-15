@@ -5,8 +5,17 @@ const User = require("../models/user");
 // INDEX route - api/rent
 exports.getRents = async function(req, res, next) {
     try {
-        let rents = await Rent.find({}).limit(parseInt(req.query.num));
-        return res.status(200).json(rents);
+        const region = req.query.region;
+        if(region) {
+            let foundRegion = await Region.find({name: {"$regex": region}}).populate("rents");
+            
+            foundRents = [].concat.apply([],foundRegion.map(region => region.rents));
+
+            return res.status(200).json(foundRents);
+        } else {
+            let rents = await Rent.find({}).limit(parseInt(req.query.num));
+            return res.status(200).json(rents);
+        }
     } catch(error) {
         return next({
             status: 400,
@@ -47,8 +56,6 @@ exports.createRents = async function(req, res, next) {
         let rentImages = [];
         req.files.forEach(file => rentImages.push(file.path));
 
-        console.log(rentImages);
-
         let rent = new Rent({
             propertyType,
             region,
@@ -64,8 +71,12 @@ exports.createRents = async function(req, res, next) {
         await Rent.create(rent);
 
         let user = await User.findById(res.locals.userId);
-        user.rent = rent;
+        user.rent.push(rent);
         await user.save();
+
+        regionData = await findRegion(region.toLowerCase().replace(/\s+/g, ''));
+        regionData.rents.push(rent);
+        await regionData.save();
 
         return res.json({"rent": "success"});
 

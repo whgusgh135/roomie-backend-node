@@ -5,6 +5,10 @@ const regionSchema = new mongoose.Schema({
     roomies: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Roomie"
+    }],
+    rents: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Rent"
     }]
 });
 
