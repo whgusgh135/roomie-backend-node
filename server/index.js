@@ -22,7 +22,8 @@ app.use("/api/user", userRoutes);
 app.use("/api/roomie", roomieRoutes);
 app.use("/api/rent", rentRoutes);
 
-app.get("/api/profileimage/uploads/:id", async function(req, res, next) {
+// route to get all the image files stored in the server
+app.get("/api/image/uploads/:id", async function(req, res, next) {
     try {
         res.sendFile(__dirname + "/uploads/" + req.params.id);
     } catch(error) {
