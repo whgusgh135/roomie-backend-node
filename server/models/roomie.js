@@ -14,11 +14,7 @@ const roomieSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    minBudget: {
-        type: Number,
-        required: true
-    },
-    maxBudget: {
+    budget: {
         type: Number,
         required: true
     },
