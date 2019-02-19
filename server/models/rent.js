@@ -17,10 +17,6 @@ const rentSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    minResidents: {
-        type: Number,
-        required: true
-    },
     maxResidents: {
         type: Number,
         required: true

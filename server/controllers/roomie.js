@@ -1,6 +1,7 @@
 const Roomie = require("../models/roomie");
 const Region = require("../models/region");
 const User = require("../models/user");
+const Budget = require("../models/budget");
 const config = require("../config/dev");
 const jwt = require("jsonwebtoken");
 
@@ -52,17 +53,17 @@ exports.selectRoomie = async function(req, res, next) {
 // CREATE route - api/roomie
 exports.createRoomie = async function(req, res, next) {
     try {
+        // check if the user already has the roomie data
         let user = await User.findById(res.locals.userId);
-
         if(user.roomie) {
             throw new Error("Roomie data already exists for this user!");
         }
 
+        // create roomie data
         let {
             phoneNumber, 
             region, 
-            minBudget, 
-            maxBudget
+            budget,
         } = req.body;
 
         let profileImage = "uploads/avatar-default.png";
@@ -73,21 +74,30 @@ exports.createRoomie = async function(req, res, next) {
         let roomie = new Roomie({
             phoneNumber, 
             region, 
-            minBudget, 
-            maxBudget,
+            budget,
             profileImage,
             name: user.firstName + " " + user.lastName
         });
-        
+
+        // save roomie data
         await roomie.save();
 
+        // save roomie data on user model
         user.roomie = roomie;
         await user.save();
 
-        regionData = await findRegion(region.toLowerCase().replace(/\s+/g, ''));
+        // save roomie data on region model -- for easier search function
+        let regionData = await findRegion(region.toLowerCase().replace(/\s+/g, ''));
         regionData.roomies.push(roomie);
         await regionData.save();
 
+        // save roomie data on budget model -- for easier search function
+        let budgetData = await Budget.findOne({amount: Number(budget)});
+        console.log(budgetData);
+        budgetData.roomies.push(roomie);
+        await budgetData.save();
+
+        // assign new token that contains roomie data
         const token = jwt.sign({
             userId: user._id,
             roomie: roomie,
@@ -102,8 +112,6 @@ exports.createRoomie = async function(req, res, next) {
             lastName: user.lastName,
             roomie
         });
-        
-        //return res.status(200).json(roomie);
 
     } catch(error) {
         return next({
