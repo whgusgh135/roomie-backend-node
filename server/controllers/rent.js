@@ -1,6 +1,8 @@
 const Rent = require("../models/rent");
 const Region = require("../models/region");
 const User = require("../models/user");
+const RentPerWeek = require("../models/rentPerWeek");
+const ResidentNum = require("../models/residentNum");
 
 // INDEX route - api/rent
 exports.getRents = async function(req, res, next) {
@@ -40,44 +42,72 @@ exports.selectRent = async function(req, res, next) {
 // CREATE route - api/rent/new
 exports.createRents = async function(req, res, next) {
     try {
+        // create roomie data
         let {
             propertyType,
             region,
             address,
             numberOfRooms,
-            minResidents,
             maxResidents,
             rentPerWeek,
             description
         } = req.body;
 
-        
-
+        // saving multiple image file save paths
         let rentImages = [];
         req.files.forEach(file => rentImages.push(file.path));
+        console.log(req.files);
+        if(!req.files) {
+            rentImages.push("uploads/house-default.jpg");
+        }
 
         let rent = new Rent({
             propertyType,
             region,
             address,
             numberOfRooms,
-            minResidents,
             maxResidents,
             rentPerWeek,
             description,
             rentImages
         });
 
+        // save rent data
         await Rent.create(rent);
 
+        // save rent data on user model
         let user = await User.findById(res.locals.userId);
         user.rent.push(rent);
         await user.save();
 
-        regionData = await findRegion(region.toLowerCase().replace(/\s+/g, ''));
+        // save rent data on region model -- for easier search function
+        let regionData = await findRegion(region.toLowerCase().replace(/\s+/g, ''));
         regionData.rents.push(rent);
         await regionData.save();
 
+        // save rent data on rentPerWeek model -- for easier search function
+        let roundedNum = Math.ceil(Number(rentPerWeek)/100) * 100;
+        if(roundNum > 1000) roundNum = 1100;
+        let rentPerWeekData = await RentPerWeek.findOne({amount: Number(roundedNum)});
+        // if(!rentPerWeekData) {
+        //     await RentPerWeek.create({amount: roundedNum})
+        //     rentPerWeekData = await RentPerWeek.findOne({amount: Number(roundedNum)});
+        // }
+        rentPerWeekData.rents.push(rent);
+        await rentPerWeekData.save();
+
+        // save rent data on residentNum model -- for easier search function
+        console.log(maxResidents);
+        let maxResidentsData = await ResidentNum.findOne({residentNum: Number(maxResidents)});
+        // if(!maxResidents){
+        //     await ResidentNum.create({residentNum: maxResidents});
+        //     maxResidentsData = await ResidentNum.findOne({residentNum: Number(maxResidents)});
+        // }
+        console.log(maxResidentsData);
+        maxResidentsData.rents.push(rent);
+        await maxResidentsData.save();
+
+        // return success message
         return res.json({"rent": "success"});
 
     } catch(error) {
