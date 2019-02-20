@@ -12,19 +12,20 @@ exports.getRoomies = async function(req, res, next) {
         if(region) {
             let foundRegion = await Region.find({name: {"$regex": region}}).populate("roomies");
 
-            // let foundRoomies = [];
-            // foundRegion.forEach(region => {
-            //     region.roomies.forEach(roomie => foundRoomies.push(roomie))
-            // });
-            
             foundRoomies = [].concat.apply([],foundRegion.map(region => region.roomies));
 
             return res.status(200).json(foundRoomies);
-        } else {
-            let roomies = await Roomie.find({}).limit(parseInt(req.query.num));
-            //let roomies = await Roomie.aggregate([{$sample: {size: parseInt(req.query.num)}}]);
-            return res.status(200).json(roomies);
         }
+        const budget = req.query.budget;
+        if(budget) {
+            let foundBudget = await Budget.findOne({amount: budget}).populate("roomies");
+            return res.status(200).json(foundBudget.roomies);
+        }
+        
+        let roomies = await Roomie.find({}).limit(parseInt(req.query.num));
+        //let roomies = await Roomie.aggregate([{$sample: {size: parseInt(req.query.num)}}]);
+        return res.status(200).json(roomies);
+        
     } catch(error) {
         return next({
             status: 400,

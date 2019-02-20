@@ -30,7 +30,13 @@ const rentSchema = new mongoose.Schema({
     },
     rentImages: [{
         type: String
-    }]
+    }],
+    phoneNumber: {
+        type: String,
+    },
+    email: {
+        type: String
+    }
 });
 
 module.exports = mongoose.model("Rent", rentSchema);
