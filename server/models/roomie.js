@@ -1,10 +1,6 @@
 const mongoose = require("mongoose");
 
 const roomieSchema = new mongoose.Schema({
-    phoneNumber: {
-        type: String,
-        required: true
-    },
     region: {
         type: String,
         required: true
@@ -17,13 +13,16 @@ const roomieSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    description: {
+        type: String
+    },
     profileImage: {
         type: String
     },
-    isActive: {
-        type: Boolean,
-        default: true
-    }
+    messages: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Message"
+    }]
 });
 
 module.exports = mongoose.model("Roomie", roomieSchema);

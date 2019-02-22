@@ -62,10 +62,12 @@ exports.createRoomie = async function(req, res, next) {
 
         // create roomie data
         let {
-            phoneNumber, 
+            description, 
             region, 
             budget,
         } = req.body;
+
+        let message = [];
 
         let profileImage = "uploads/avatar-default.png";
         if(req.file) {
@@ -73,10 +75,11 @@ exports.createRoomie = async function(req, res, next) {
         }
 
         let roomie = new Roomie({
-            phoneNumber, 
+            description, 
             region, 
             budget,
             profileImage,
+            message,
             name: user.firstName + " " + user.lastName
         });
 
