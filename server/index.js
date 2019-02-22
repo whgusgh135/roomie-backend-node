@@ -17,10 +17,12 @@ mongoose.connect(config.DB_URI, { useNewUrlParser: true });
 const userRoutes = require("./routes/user");
 const roomieRoutes = require("./routes/roomie");
 const rentRoutes = require("./routes/rent");
+const messageRoutes = require("./routes/message");
 
 app.use("/api/user", userRoutes);
 app.use("/api/roomie", roomieRoutes);
 app.use("/api/rent", rentRoutes);
+app.use("/api/message", messageRoutes);
 
 // route to get all the image files stored in the server
 app.get("/api/image/uploads/:id", async function(req, res, next) {
