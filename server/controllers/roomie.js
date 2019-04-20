@@ -4,6 +4,7 @@ const User = require("../models/user");
 const Budget = require("../models/budget");
 const config = require("../config/dev");
 const jwt = require("jsonwebtoken");
+const fs = require("fs");
 
 // INDEX route - api/roomie
 exports.getRoomies = async function(req, res, next) {
@@ -55,7 +56,7 @@ exports.selectRoomie = async function(req, res, next) {
 exports.createRoomie = async function(req, res, next) {
     try {
         // check if the user already has the roomie data
-        let user = await User.findById(res.locals.userId);
+        let user = await User.findById(res.locals.userId).populate("roomie");
         if(user.roomie) {
             throw new Error("Roomie data already exists for this user!");
         }
@@ -80,7 +81,8 @@ exports.createRoomie = async function(req, res, next) {
             budget,
             profileImage,
             message,
-            name: user.firstName + " " + user.lastName
+            name: user.firstName + " " + user.lastName,
+            user: user
         });
 
         // save roomie data
@@ -128,7 +130,14 @@ exports.createRoomie = async function(req, res, next) {
 // UPDATE route - api/roomie/:id
 exports.updateRoomie = async function(req, res, next) {
     try {
-        await Roomie.findByIdAndUpdate(req.params.id, req.body);
+        let user = await User.findById(req.params.id).populate("roomie");
+
+        if(req.file) {
+            req.body.profileImage = req.file.path;
+        }
+        
+        await fs.unlink(user.roomie.profileImage);
+        await Roomie.findByIdAndUpdate(user.roomie._id, req.body);
         return res.status(200).json({"update": "success"});
     } catch(error) {
         return next({
@@ -141,13 +150,17 @@ exports.updateRoomie = async function(req, res, next) {
 // DELETE route - api/roomie/:id
 exports.deleteRoomie = async function(req, res, next) {
     try {
-        await Roomie.findById(req.params.id).remove();
+        let user = await User.findById(req.params.id).populate("roomie");
+        await fs.unlink(user.roomie.profileImage);
+        await Roomie.findById(user.roomie._id).remove();
+        // PUT A PIN ON THIS
+        
         return res.status(200).json({"roomie": "deleted"});
     } catch(error) {
         return next({
             status: 400,
             message: error.message
-        })
+        });
     }
 }
 

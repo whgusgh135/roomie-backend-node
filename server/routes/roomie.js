@@ -21,7 +21,7 @@ const upload = multer({ storage: storage });
 router.get("/", Roomie.getRoomies)
 router.get("/:id", Roomie.selectRoomie);
 router.post("/", loginRequired, upload.single('profileImage'), Roomie.createRoomie);
-router.put("/:id", Roomie.updateRoomie);
+router.put("/:id", upload.single('profileImage'), Roomie.updateRoomie);
 router.delete("/:id", Roomie.deleteRoomie);
 
 module.exports = router;
