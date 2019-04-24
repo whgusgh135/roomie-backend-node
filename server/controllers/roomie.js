@@ -81,7 +81,7 @@ exports.createRoomie = async function(req, res, next) {
             budget,
             profileImage,
             message,
-            name: user.firstName + " " + user.lastName,
+            name: user.firstName.charAt(0).toUpperCase() + user.firstName.slice(1) + " " + user.lastName.charAt(0).toUpperCase() + user.lastName.slice(1),
             user: user
         });
 
@@ -99,7 +99,6 @@ exports.createRoomie = async function(req, res, next) {
 
         // save roomie data on budget model -- for easier search function
         let budgetData = await Budget.findOne({amount: Number(budget)});
-        console.log(budgetData);
         budgetData.roomies.push(roomie);
         await budgetData.save();
 
@@ -130,15 +129,34 @@ exports.createRoomie = async function(req, res, next) {
 // UPDATE route - api/roomie/:id
 exports.updateRoomie = async function(req, res, next) {
     try {
-        let user = await User.findById(req.params.id).populate("roomie");
+        let user = await User.findById(req.params.id).populate("roomie").populate("rent");
 
         if(req.file) {
             req.body.profileImage = req.file.path;
+            await fs.unlink(user.roomie.profileImage);
         }
         
-        await fs.unlink(user.roomie.profileImage);
         await Roomie.findByIdAndUpdate(user.roomie._id, req.body);
-        return res.status(200).json({"update": "success"});
+
+        let roomie = await Roomie.findById(user.roomie._id);
+
+        const token = jwt.sign({
+            userId: user._id,
+            roomie: roomie,
+            rent: user.rent,
+            firstName: user.firstName,
+            lastName: user.lastName
+        }, config.JWT_KEY, {expiresIn: "1h"});
+
+        return res.json({
+            token,
+            userId: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            rent: user.rent,
+            roomie
+        });
+
     } catch(error) {
         return next({
             status: 400,
@@ -153,8 +171,7 @@ exports.deleteRoomie = async function(req, res, next) {
         let user = await User.findById(req.params.id).populate("roomie");
         await fs.unlink(user.roomie.profileImage);
         await Roomie.findById(user.roomie._id).remove();
-        // PUT A PIN ON THIS
-        
+        console.log(req.body)
         return res.status(200).json({"roomie": "deleted"});
     } catch(error) {
         return next({
