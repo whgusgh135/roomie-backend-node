@@ -3,6 +3,7 @@ const Region = require("../models/region");
 const User = require("../models/user");
 const RentPerWeek = require("../models/rentPerWeek");
 const ResidentNum = require("../models/residentNum");
+const fs = require("fs");
 
 // INDEX route - api/rent
 exports.getRents = async function(req, res, next) {
@@ -134,6 +135,40 @@ exports.createRents = async function(req, res, next) {
 exports.updateRent = async function(req, res, next) {
     try {
         await Rent.findByIdAndUpdate(req.params.id, req.body);
+
+        let user = await User.findById(req.params.id).populate("rent").populate("roomie");
+
+        
+        if(req.file) {
+            await user.rent[index].rentImages.forEach(img => {
+                fs.unlink(img);
+            });
+            let rentImages = [];
+            req.files.forEach(file => rentImages.push(file.path));
+            req.body.rentImages = rentImages;
+        }
+        
+        await Rent.findByIdAndUpdate(user.rent._id, req.body);
+
+        let rent = await Rent.findById(user.rent._id);
+
+        const token = jwt.sign({
+            userId: user._id,
+            roomie: user.roomie,
+            rent: rent,
+            firstName: user.firstName,
+            lastName: user.lastName
+        }, config.JWT_KEY, {expiresIn: "1h"});
+
+        return res.json({
+            token,
+            userId: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            rent: rent,
+            roomie: user.roomie
+        });
+
         return res.json({"update": "success"});
     } catch(error) {
         return next(error);
@@ -143,8 +178,19 @@ exports.updateRent = async function(req, res, next) {
 // DELETE route - api/rent/:id
 exports.deleteRent = async function(req, res, next) {
     try {
-        await Rent.findById(req.params.id).remove();
-        return res.json({"rent": "deleted"});
+        let user = await User.findById(req.params.id).populate("rent");
+        console.log(req.body)
+        let index = user.rent.findIndex(obj => obj._id == req.body.id);
+    
+        await user.rent[index].rentImages.forEach(img => {
+            fs.unlink(img);
+        });
+        await Rent.findById(user.rent[index]._id).remove();
+
+        user.rent = user.rent.filter(rent => rent._id !== req.body.id);
+        await User.updateOne({_id: req.params.id}, user);
+
+        return res.status(200).json({"rent": "deleted"});
     } catch(error) {
         return next(error);
     }

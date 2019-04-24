@@ -43,7 +43,7 @@ exports.register = async function(req, res, next) {
 
 exports.authenticate = async function(req, res, next) {
     try {
-        let user = await User.findOne({id: req.body.id}).populate("roomie");
+        let user = await User.findOne({id: req.body.id}).populate("roomie").populate("rent");
 
         let roomie = (user.roomie) ? user.roomie : {"profileImage": "uploads/avatar-default.png"};
         //check password matches
@@ -54,7 +54,8 @@ exports.authenticate = async function(req, res, next) {
                 userId: user._id,
                 roomie: roomie,
                 firstName: user.firstName,
-                lastName: user.lastName
+                lastName: user.lastName,
+                rent: user.rent
             }, config.JWT_KEY, {expiresIn: "1h"});
 
             return res.json({
@@ -62,6 +63,7 @@ exports.authenticate = async function(req, res, next) {
                 userId: user._id,
                 firstName: user.firstName,
                 lastName: user.lastName,
+                rent: user.rent,
                 roomie
             });
         } else {
