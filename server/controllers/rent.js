@@ -3,6 +3,8 @@ const Region = require("../models/region");
 const User = require("../models/user");
 const RentPerWeek = require("../models/rentPerWeek");
 const ResidentNum = require("../models/residentNum");
+const config = require("../config/dev");
+const jwt = require("jsonwebtoken");
 const fs = require("fs");
 
 // INDEX route - api/rent
@@ -134,28 +136,31 @@ exports.createRents = async function(req, res, next) {
 // UPDATE route - api/rent/:id
 exports.updateRent = async function(req, res, next) {
     try {
-        await Rent.findByIdAndUpdate(req.params.id, req.body);
-
         let user = await User.findById(req.params.id).populate("rent").populate("roomie");
 
-        
-        if(req.file) {
+        let index = user.rent.findIndex(obj => obj._id == req.body.id);
+
+        if(req.files) {
+            console.log(index);
             await user.rent[index].rentImages.forEach(img => {
                 fs.unlink(img);
             });
+            console.log(user.rent[index].rentImages)
+
             let rentImages = [];
             req.files.forEach(file => rentImages.push(file.path));
             req.body.rentImages = rentImages;
         }
+        console.log(req.body);
         
-        await Rent.findByIdAndUpdate(user.rent._id, req.body);
+        await Rent.findByIdAndUpdate(user.rent[index]._id, req.body);;
 
-        let rent = await Rent.findById(user.rent._id);
+        user = await User.findById(req.params.id).populate("rent").populate("roomie");
 
         const token = jwt.sign({
             userId: user._id,
             roomie: user.roomie,
-            rent: rent,
+            rent: user.rent,
             firstName: user.firstName,
             lastName: user.lastName
         }, config.JWT_KEY, {expiresIn: "1h"});
@@ -165,7 +170,7 @@ exports.updateRent = async function(req, res, next) {
             userId: user._id,
             firstName: user.firstName,
             lastName: user.lastName,
-            rent: rent,
+            rent: user.rent,
             roomie: user.roomie
         });
 

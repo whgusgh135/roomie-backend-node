@@ -171,7 +171,6 @@ exports.deleteRoomie = async function(req, res, next) {
         let user = await User.findById(req.params.id).populate("roomie");
         await fs.unlink(user.roomie.profileImage);
         await Roomie.findById(user.roomie._id).remove();
-        console.log(req.body)
         return res.status(200).json({"roomie": "deleted"});
     } catch(error) {
         return next({
