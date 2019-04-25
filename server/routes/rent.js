@@ -19,7 +19,7 @@ const upload = multer({ storage: storage });
 router.get("/", Rent.getRents);
 router.get("/:id", Rent.selectRent);
 router.post("/", loginRequired, upload.array('rentImages', 5), Rent.createRents);
-router.put("/:id", Rent.updateRent);
+router.put("/:id", upload.array('rentImages', 5), Rent.updateRent);
 router.delete("/:id", Rent.deleteRent);
 
 module.exports = router;
