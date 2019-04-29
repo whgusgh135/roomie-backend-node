@@ -168,10 +168,27 @@ exports.updateRoomie = async function(req, res, next) {
 // DELETE route - api/roomie/:id
 exports.deleteRoomie = async function(req, res, next) {
     try {
-        let user = await User.findById(req.params.id).populate("roomie");
+        let user = await User.findById(req.params.id).populate("roomie").populate("rent");
+        
         await fs.unlink(user.roomie.profileImage);
         await Roomie.findById(user.roomie._id).remove();
-        return res.status(200).json({"roomie": "deleted"});
+
+        const token = jwt.sign({
+            userId: user._id,
+            roomie: {"profileImage": "uploads/avatar-default.png"},
+            rent: user.rent,
+            firstName: user.firstName,
+            lastName: user.lastName
+        }, config.JWT_KEY, {expiresIn: "1h"});
+
+        return res.json({
+            token,
+            userId: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            rent: user.rent,
+            roomie: {"profileImage": "uploads/avatar-default.png"}
+        });
     } catch(error) {
         return next({
             status: 400,
