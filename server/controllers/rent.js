@@ -93,7 +93,7 @@ exports.createRents = async function(req, res, next) {
         await Rent.create(rent);
 
         // save rent data on user model
-        let user = await User.findById(res.locals.userId);
+        let user = await User.findById(res.locals.userId).populate("roomie").populate("rent");
         user.rent.push(rent);
         await user.save();
 
@@ -122,8 +122,23 @@ exports.createRents = async function(req, res, next) {
         maxResidentsData.rents.push(rent);
         await maxResidentsData.save();
 
-        // return success message
-        return res.json({"rent": "success"});
+        // return token so user state is updated
+        const token = jwt.sign({
+            userId: user._id,
+            roomie: user.roomie,
+            rent: user.rent,
+            firstName: user.firstName,
+            lastName: user.lastName
+        }, config.JWT_KEY, {expiresIn: "1h"});
+
+        return res.json({
+            token,
+            userId: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            rent: user.rent,
+            roomie: user.roomie
+        });
 
     } catch(error) {
         return next({
@@ -133,25 +148,26 @@ exports.createRents = async function(req, res, next) {
     }
 };
 
-// UPDATE route - api/rent/:id
+// UPDATE route - api/rent/:id/:rentId
 exports.updateRent = async function(req, res, next) {
     try {
         let user = await User.findById(req.params.id).populate("rent").populate("roomie");
 
-        let index = user.rent.findIndex(obj => obj._id == req.body.id);
+        let index = user.rent.findIndex(obj => obj._id == req.params.rentId);
 
-        if(req.files) {
-            console.log(index);
-            await user.rent[index].rentImages.forEach(img => {
+        if(req.files[0]) {
+            let rent = await Rent.findById(req.params.rentId);
+            rent.rentImages.forEach(img => {
                 fs.unlink(img);
             });
-            console.log(user.rent[index].rentImages)
 
             let rentImages = [];
             req.files.forEach(file => rentImages.push(file.path));
             req.body.rentImages = rentImages;
+        } else {
+            delete req.body.rentImages;
         }
-        console.log(req.body);
+
         
         await Rent.findByIdAndUpdate(user.rent[index]._id, req.body);;
 
@@ -173,29 +189,42 @@ exports.updateRent = async function(req, res, next) {
             rent: user.rent,
             roomie: user.roomie
         });
-
-        return res.json({"update": "success"});
     } catch(error) {
         return next(error);
     }
 }
 
-// DELETE route - api/rent/:id
+// DELETE route - api/rent/:id/:rentId
 exports.deleteRent = async function(req, res, next) {
     try {
-        let user = await User.findById(req.params.id).populate("rent");
+        let user = await User.findById(req.params.id).populate("rent").populate("roomie");
         console.log(req.body)
-        let index = user.rent.findIndex(obj => obj._id == req.body.id);
+        let index = user.rent.findIndex(obj => obj._id == req.params.rentId);
     
         await user.rent[index].rentImages.forEach(img => {
             fs.unlink(img);
         });
         await Rent.findById(user.rent[index]._id).remove();
 
-        user.rent = user.rent.filter(rent => rent._id !== req.body.id);
+        user.rent = user.rent.filter(rent => rent._id != req.params.rentId);
         await User.updateOne({_id: req.params.id}, user);
 
-        return res.status(200).json({"rent": "deleted"});
+        const token = jwt.sign({
+            userId: user._id,
+            roomie: user.roomie,
+            rent: user.rent,
+            firstName: user.firstName,
+            lastName: user.lastName
+        }, config.JWT_KEY, {expiresIn: "1h"});
+
+        return res.json({
+            token,
+            userId: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            rent: user.rent,
+            roomie: user.roomie
+        });
     } catch(error) {
         return next(error);
     }
