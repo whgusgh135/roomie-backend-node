@@ -26,10 +26,8 @@ exports.loginRequired = async function(req, res, next) {
 
 exports.ensureCorrectuser = async function(req, res, next) {
     try {
-        console.log(req.params.id)
         const token = req.headers.authorization.split(" ")[1];
         jwt.verify(token, config.JWT_KEY, function(error, decoded){
-            console.log(decoded);
             if(decoded && decoded.userId == req.params.id) {
                 return next();
             } else {

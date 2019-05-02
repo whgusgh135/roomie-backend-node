@@ -82,7 +82,7 @@ exports.createRoomie = async function(req, res, next) {
             profileImage,
             message,
             name: user.firstName.charAt(0).toUpperCase() + user.firstName.slice(1) + " " + user.lastName.charAt(0).toUpperCase() + user.lastName.slice(1),
-            user: user
+            user
         });
 
         // save roomie data

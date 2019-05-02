@@ -6,8 +6,8 @@ const messageSchema = new mongoose.Schema({
         required: true
     },
     from: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Roomie"
+        type: String,
+        required: true
     },
     read: {
         type: Boolean,
