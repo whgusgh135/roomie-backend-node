@@ -7,13 +7,13 @@ exports.createMessage = async function(req, res, next) {
     try {
         let { message, roomieId } = req.body;
         let user = await User.findById(res.locals.userId).populate("roomie");
-        console.log(message);
+
         let newMessage = new Message({
             message: message,
-            from: user.roomie
+            from: user.roomie._id,
+            date: Date.now()
         });
 
-        console.log(newMessage);
         await newMessage.save();
 
         // Find the roomie who is going to receive the message
@@ -39,7 +39,7 @@ exports.selectMessages = async function(req, res, next) {
             populate: { path: "messages"}
         });
 
-        let messages = user.messages;
+        let messages = user.roomie.messages;
         return res.json(messages);
     } catch(error) {
         return next({
@@ -73,7 +73,7 @@ exports.readMessage = async function(req, res, next) {
     }
 }
 
-// DELETE route - api/message/:id
+// DELETE route - api/message/:id/:msgId
 exports.deleteMessage = async function(req, res, next) {
     try {
         let user = await User.findById(res.locals.userId).populate("rent").populate({
@@ -81,9 +81,10 @@ exports.deleteMessage = async function(req, res, next) {
             populate: { path: "messages"}
         });
 
-        user.roomie.messages = user.roomie.messages.filter(message => message._id != req.body.id);
+        user.roomie.messages = user.roomie.messages.filter(message => message._id != req.params.msgId);
     
-        await User.updateOne({_id: res.locals.userId}, user);
+        await Roomie.updateOne({_id: user.roomie._id}, user.roomie);
+        await Message.findById(req.params.msgId).remove();
 
         return res.json(user.roomie.messages);
 
