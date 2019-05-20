@@ -43,10 +43,12 @@ exports.register = async function(req, res, next) {
 
 exports.authenticate = async function(req, res, next) {
     try {
-        let user = await User.findOne({id: req.body.id}).populate("rent").populate({
-            path: "roomie",
-            populate: { path: "messages"}
-        });
+        let user = await User.findOne({id: req.body.id}).populate("rent").populate("roomie");
+
+        // let user = await User.findOne({id: req.body.id}).populate("rent").populate({
+        //     path: "roomie",
+        //     populate: { path: "messages"}
+        // });
 
         let roomie = (user.roomie) ? user.roomie : {"profileImage": "uploads/avatar-default.png"};
         //check password matches
